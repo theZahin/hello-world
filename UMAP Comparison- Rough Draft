@@ -1,0 +1,55 @@
+library(tidyverse)
+library(plyr)
+library(dplyr)
+library(corrplot)
+
+setwd("~/Documents/Sekaly/R/NLRX1 CD127nCD25p comp screening/Output Files")
+setwd("~/Documents/Sekaly/R/TSNE CD4p - Flavio/Output Files")
+
+#Given a FlowJO file outputted from TSNE, generate CSV for the Louvain files 
+
+x3 <-read.csv('KNN_clustering_for_FlowJo.csv')
+write.csv(x3, 'KNN_clustering_for_FlowJo.csv')
+x6 <- as.data.frame(table(x3$DonorID, x3$louvain))
+nlr <- x6
+
+#import data not included
+
+colnames(nlr) <- c('StimID', 'Cluster', 'Frequency')    #changing the names of the outputted file into something I want
+head(nlr)                                               #confirming that my changes to the column names have been applied 
+colnames(ox) <- c('StimId', "Cluster", 'Frequency') 
+ox %>% group_by('StimID') %>% do(ox)  
+nlr %>% group_by('StimID') %>% do(nlr)                  #grouping the data by the categorial variable I am interested in 
+nlr$StimId                                              #access the column I am interested in from the data set 
+nlr$StimID[1,1] <- "Poly IC"                            #this allowed me to add a fourth column 
+nlr[4] <- NULL                                          #I can remove columns I do not want with this command 
+nlr[1:2, 3]                                             #I can select the first two columns, or whatever columns I am interested in, and a specific row
+nlr[1,1] <- c("Poly IC")                                #I can change the first column, row one name to Poly IC
+nlr_2 <- nlr[1]                                         #Here I can separate the first column, the StimId
+nlr$StimId<- 1                                          #This changes the entire StimID column into ones
+str(nlr)                                                #look at data's structure
+nlr$StimID <- as.factor(nlr$StimId)                     #changes the column data into a numeric 
+summary(nlr$Cluster)                                    #allows me to loow at the data in categories, however I wish 
+nlr.split <- spread(nlr_2, Cluster, Frequency)          #This splits a long column into multiple rows, specify what is split, then preserved
+nlr_2 <- nlr                                            #this establishes another variable for the data of interest
+data <- read.csv('pi.csv')                              #imports a key which identifies the stimulation 
+new_name <- data$Stimulation                            #the stimulation column is bound to a new variable 
+names <-colnames(nlr_2)                                 #this takes the column names and binds them to another variable 
+nlrmerged <- merge(nlr_2, data, by= c('StimID'))        #the stimulation key is merged with the data of interest and sorted through a vector 
+arrange(nlrmerged, Stimulation, Cluster)                #sorts the data first by stimulation, then by cluster 
+nlrtransformed <- nlrmerged 
+nlrtransformed[1] <- NULL                               #removes the first column with the numerical identify for each stimulation 
+unique(nlrtransformed$Stimulation)                      #check all unique stimulations 
+nlrsubsetted1 <- subset(nlrtransformed, nlrtransformed$Stimulation =='TGF-B') #subsets the data based on the stimualtion I am interested in 
+nlrsubsetted1[2] <- (nlrsubsetted1[2]/sum(nlrsubsetted1$Frequency))*100 #transforms the number of cells into frequencies 
+nlrfreq <- nlrsubsetted1
+sum(nlrfreq$Frequency)                                  #sums all the frequencies, as they should all equal 100 percent 
+nlrfreq <- arrange(nlrfreq, Cluster, Frequency)        #sorts all the data based on the donor, which will allow for compariosn with non-stim 
+
+nlrsubsetted2 <- subset(nlrtransformed, nlrtransformed$Stimulation =='Non-Stim') 
+nlrsubsetted2[2] <- (nlrsubsetted2[2]/sum(nlrsubsetted2$Frequency))*100 
+nlrfreq1 <- nlrsubsetted2
+sum(nlrfreq1$Frequency)   
+nlrfreq1 <- arrange(nlrfreq1, Cluster, Frequency)
+
+                    
