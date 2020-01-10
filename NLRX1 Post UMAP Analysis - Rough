@@ -1,0 +1,72 @@
+library(plyr)
+library(dplyr)
+library(tidyverse)
+library(corrplot)
+
+setwd("~/Documents/Sekaly/R/NLRX1 CD127nCD25p comp screening/Output Files")
+x3 <-read.csv('KNN_clustering_for_FlowJo.csv')
+write.csv(x3, 'KNN_clustering_for_FlowJo.csv')
+x6 <- as.data.frame(table(x3$DonorID, x3$louvain))
+nlr <- x6
+colnames(nlr) <- c('StimID', 'Cluster', 'Frequency')  
+nlr %>% group_by('StimID') %>% do(nlr)   
+
+nlr_2 <- nlr 
+data <- read.csv('pi.csv')                           
+new_name <- data$Stimulation                        
+names <-colnames(nlr_2)                            
+nlrmerged <- merge(nlr_2, data, by= c('StimID'))         
+arrange(nlrmerged, Stimulation, Cluster)                
+nlrtransformed <- nlrmerged 
+#nlrtransformed[1] <- NULL                               
+unique(nlrtransformed$Stimulation) 
+
+a <- c('IL10')                             
+nlrsubsetted1 <- subset(nlrtransformed, nlrtransformed$Stimulation ==a) 
+b <- c('IL18')                             
+nlrsubsetted1 <- subset(nlrtransformed, nlrtransformed$Stimulation ==b) 
+c <- c('TGF-B')                             
+nlrsubsetted1 <- subset(nlrtransformed, nlrtransformed$Stimulation ==c) 
+d <- c('IL1b')                             
+nlrsubsetted1 <- subset(nlrtransformed, nlrtransformed$Stimulation ==d) 
+
+nlrsubsetted1[3] <- (nlrsubsetted1[3]/sum(nlrsubsetted1$Frequency))*100 
+nlrfreq <- nlrsubsetted1
+sum(nlrfreq$Frequency)                             
+nlrfreq <- arrange(nlrfreq, Cluster, Frequency)        
+nlrsubsetted2 <- subset(nlrtransformed, nlrtransformed$Stimulation =='Non-Stim') 
+nlrsubsetted2[3] <- (nlrsubsetted2[3]/sum(nlrsubsetted2$Frequency))*100 
+nlrfreq1 <- nlrsubsetted2
+sum(nlrfreq1$Frequency)   
+v = 3; 
+nlrfreq1 <- arrange(nlrfreq1, Cluster, Frequency)
+n <- 1:5; m <- 6:10; o <- 11:15; p <- 16:20; q <- 21:25; r <- 26:30; s <- 31:35 ;t <- 36:40;u <- 41:45 ;j <- 46:50 ;w <- 51:55;x <- 56:60 ;y <- 61:65;z <- 66:70 ;a <- 71:75 ;b <- 76:80 ;c <- 81:85;d <- 86:90;e <- 91:95;f <- 96:100;g <- 101:105;h <- 106:110;i <- 111:115
+t.test(nlrfreq[n, v], nlrfreq1[n, v], paired=TRUE, alternative = "two.sided")$p.value;t.test(nlrfreq[m, v], nlrfreq1[m, v], paired=TRUE)$p.value;t.test(nlrfreq[o, v], nlrfreq1[o, v], paired=TRUE)$p.value;t.test(nlrfreq[p, v], nlrfreq1[p, v], paired=TRUE)$p.value;t.test(nlrfreq[q, v], nlrfreq1[q, v], paired=TRUE)$p.value;t.test(nlrfreq[r, v], nlrfreq1[r, v], paired=TRUE)$p.value;t.test(nlrfreq[s, v], nlrfreq1[s, v], paired=TRUE)$p.value;t.test(nlrfreq[t, v], nlrfreq1[t, v], paired=TRUE)$p.value;t.test(nlrfreq[u, v], nlrfreq1[u, v], paired=TRUE)$p.value;t.test(nlrfreq[j, v], nlrfreq1[j, v], paired=TRUE)$p.value;t.test(nlrfreq[w,v], nlrfreq1[w, v], paired=TRUE)$p.value;t.test(nlrfreq[x, v], nlrfreq1[x, v], paired=TRUE)$p.value;t.test(nlrfreq[y, v], nlrfreq1[y, v], paired=TRUE)$p.value;t.test(nlrfreq[z, v], nlrfreq1[z, v], paired=TRUE)$p.value;t.test(nlrfreq[a, v], nlrfreq1[a, v], paired=TRUE)$p.value;t.test(nlrfreq[b, v], nlrfreq1[b, v], paired=TRUE)$p.value;t.test(nlrfreq[c, v], nlrfreq1[c, v], paired=TRUE)$p.value;t.test(nlrfreq[d, v], nlrfreq1[d, v], paired=TRUE)$p.value;t.test(nlrfreq[e, v], nlrfreq1[e, v], paired=TRUE)$p.value;t.test(nlrfreq[f, v], nlrfreq1[f, v], paired=TRUE)$p.value;t.test(nlrfreq[g, v], nlrfreq1[g, v], paired=TRUE)$p.value;t.test(nlrfreq[h, v], nlrfreq1[h, v], paired=TRUE)$p.value;t.test(nlrfreq[i, v], nlrfreq1[i, v], paired=TRUE)$p.value
+
+#wilcox.test(nlrfreq[u, v], nlrfreq1[u, v], paired=TRUE, alternative="two.sided")
+#otta convert to a dataframe with a bunch of columns and then select specific columns for pairwise comparison 
+  #cor(dataFrame[2], dataFrame[3])
+#res <- wilcox.test(before, after, paired = TRUE)
+
+
+nlrspread <- spread(nlrfreq, Cluster, Frequency)
+sigClus <- nlrspread
+
+#TGF-B Filtering
+sigClus[, 6] = NULL
+
+#Now must filter out the Non-CD-4 Tregs 
+tcells <- sigClus
+tcells[, 3] = NULL
+
+#Artifaats have not been removed in tcells, not filter based off increases and decreases 
+tcellsup <- tcells
+tcellsdown <- tcells
+
+#Now eliminate clusters known to increase
+
+#sample code to create a correlation graph 
+t <- tcells[, 5:6]
+s <- tcells[, 3:4]
+cor(s,t)
+corrplot(cor(s,t), Method = "circle")
